@@ -87,20 +87,19 @@ int wav_to_gtp(std::string input_file, std::string output_file)
 	buffer.push_back(data);
 	printf("Number of data bytes found: %lu\n", buffer.size());
 	if (buffer.size() < 5) {
-		printf("No BASIC data found !\n");
+		printf("No data found !\n");
 		return -1;
 	}
-	if (buffer[1] != 0x36 || buffer[2] != 0x2c) {
-		printf("BASIC START not found !\n");
-		return -1;
+	if (buffer[1] == 0x36 || buffer[2] == 0x2c) {
+		printf("BASIC program found\n");
 	}
-	uint16_t basic_start = buffer[1] | buffer[2]<<8;
-	uint16_t basic_end   = buffer[3] | buffer[4]<<8;
-	printf("Found BASIC START:%04x\n", basic_start);
-	printf("Found BASIC END  :%04x\n", basic_end);
+	uint16_t program_start = buffer[1] | buffer[2]<<8;
+	uint16_t program_end   = buffer[3] | buffer[4]<<8;
+	printf("Found PROGRAM START:%04x\n", program_start);
+	printf("Found PROGRAM END  :%04x\n", program_end);
 	// basic size 
 	//  + 0xA5 byte +  4 bytes for basic start/end +  checksum + garbage byte
-	uint16_t block_size = (basic_end - basic_start) + 1 + 4 + 2;
+	uint16_t block_size = (program_end - program_start) + 1 + 4 + 2;
 	printf("Found SIZE :%04x\n", block_size);
 	if (buffer.size() < block_size) {
 		printf("There is not enough data found !\n");
