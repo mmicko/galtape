@@ -4,7 +4,7 @@
 #include "cxxopts.hpp"
 #include "wave/file.h"
 
-int wav_to_gtp(std::string input_file, std::string output_file)
+int wav_to_gtp(std::string input_file, std::string output_file, double level)
 {
 	wave::File read_file;
 	std::vector<float> content;
@@ -39,7 +39,7 @@ int wav_to_gtp(std::string input_file, std::string output_file)
 	for (size_t i = 0; i < numSamples; i++)
 	{
 		double currentSample = content[i];
-		uint8_t val = (currentSample >  0.05) ? 1 : 0;
+		uint8_t val = (currentSample >  level) ? 1 : 0;
 		//printf("%f  %d\n",currentSample, val);
 		if (prevVal == val && i < (numSamples-1)) {
 			cnt++;
@@ -137,6 +137,7 @@ int main(int argc, const char* argv[])
 			("i,input", "Input", cxxopts::value<std::string>())
 			("o,output", "Output file", cxxopts::value<std::string>())
 			("gtp", "Convert WAV to GTP", cxxopts::value<bool>())
+			("level", "Egde level for cassette", cxxopts::value<double>()->default_value("0.05"))
 			("help", "Print help")
 		;
 
@@ -172,7 +173,7 @@ int main(int argc, const char* argv[])
 			return 1;
 		}
 		if (result.count("gtp")) {
-			return wav_to_gtp(input_file, output_file);
+			return wav_to_gtp(input_file, output_file, result["level"].as<double>());
 		}
 
 	}
