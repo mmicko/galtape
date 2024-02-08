@@ -21,7 +21,7 @@ int wav_to_gtp(std::string input_file, std::string output_file)
 	std::cout << "Converting Galaksija WAV tape to GTP format." << std::endl;
 	size_t numSamples = content.size();
 	int cnt = 0;
-	int8_t prevVal = 0;
+	uint8_t prevVal = 0;
 	uint8_t bitcounter = 0;
 	uint8_t data = 0x00;
 	bool wait_a5 = true;
@@ -30,37 +30,33 @@ int wav_to_gtp(std::string input_file, std::string output_file)
 
 	std::vector<uint8_t> buffer;
 
+	printf("Sample rate       : %lu\n", read_file.sample_rate());
+	printf("Bits per sample   : %u\n", read_file.bits_per_sample());
+	printf("Channels          : %u\n", read_file.channel_number());
 	printf("Number of samples : %lu\n", numSamples);
+	printf("\n");
+
 	for (size_t i = 0; i < numSamples; i++)
 	{
 		double currentSample = content[i];
-		//printf("%f\n",currentSample);
-		int8_t val = 0;
-		if (currentSample >  0.3) val = 1;
-		if (currentSample < -0.3) val = -1;
+		uint8_t val = (currentSample >  0.05) ? 1 : 0;
+		//printf("%f  %d\n",currentSample, val);
 		if (prevVal == val && i < (numSamples-1)) {
 			cnt++;
 		} else {
 			if (prevVal==0) { 
 				//printf("%d cnt:%d %02x\n",prevVal,cnt,data);
-				if (cnt<50) {
+				if (cnt<100) {
 					// 1
 					if (half) {
-						data = (data >> 1) | 0x80;
-						half = 0;
-					} else {
-						half = 1;
-					} 
-				} else if (cnt < 200 ) {
+						data = (data >> 1) | 0x80;						
+					}
+					half ^= 1; 
+				} else if (cnt < 230 ) {
 					// 0
 					data = (data >> 1) | 0;
 				} else {
-					// 1
-					if (half) {
-						data = (data >> 1) | 0x80;
-					} else {
-						data = (data >> 1) | 0;
-					}
+					data = (data >> 1) | (half ? 0x80 : 0);
 					half = 0;
 					if (!wait_a5) {
 						buffer.push_back(data);
