@@ -126,7 +126,7 @@ int main(int argc, const char* argv[])
 	try
 	{
 		std::string name = argv[0];
-		cxxopts::Options options(name.c_str(), name + " - Galaksija cassette tape tool\nCopyright (c) 2024 Miodrag Milanovic");
+		cxxopts::Options options(name.c_str(), name + " - Galaksija cassette tape tool v0.1\nCopyright (c) 2024 Miodrag Milanovic");
 		options
 			.positional_help("[optional args]")
 			.show_positional_help();
