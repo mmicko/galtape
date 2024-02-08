@@ -39,7 +39,7 @@ int wav_to_gtp(std::string input_file, std::string output_file, double level)
 	for (size_t i = 0; i < numSamples; i++)
 	{
 		double currentSample = content[i];
-		uint8_t val = (currentSample >  level) ? 1 : 0;
+		uint8_t val = (currentSample < -level) ? 1 : 0;
 		//printf("%f  %d\n",currentSample, val);
 		if (prevVal == val && i < (numSamples-1)) {
 			cnt++;
@@ -137,7 +137,7 @@ int main(int argc, const char* argv[])
 			("i,input", "Input", cxxopts::value<std::string>())
 			("o,output", "Output file", cxxopts::value<std::string>())
 			("gtp", "Convert WAV to GTP", cxxopts::value<bool>())
-			("level", "Egde level for cassette", cxxopts::value<double>()->default_value("0.05"))
+			("level", "Egde level for cassette", cxxopts::value<double>()->default_value("0.1"))
 			("help", "Print help")
 		;
 
