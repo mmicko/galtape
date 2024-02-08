@@ -4,7 +4,7 @@
 #include "cxxopts.hpp"
 #include "wave/file.h"
 
-int wav_to_gtp(std::string input_file, std::string output_file, double level)
+int wav_to_gtp(std::string input_file, std::string output_file, double level, int channel)
 {
 	wave::File read_file;
 	std::vector<float> content;
@@ -15,7 +15,7 @@ int wav_to_gtp(std::string input_file, std::string output_file, double level)
 	}
 	err = read_file.Read(&content);
 	if (err) {
-		std::cout << "Something went wrong while reading input file." << std::endl;
+		std::cerr << "Something went wrong while reading input file." << std::endl;
 		return 1;
 	}
 	std::cout << "Converting Galaksija WAV tape to GTP format." << std::endl;
@@ -36,7 +36,11 @@ int wav_to_gtp(std::string input_file, std::string output_file, double level)
 	printf("Number of samples : %lu\n", numSamples);
 	printf("\n");
 
-	for (size_t i = 0; i < numSamples; i++)
+	if ((channel+1) > read_file.channel_number()) {
+		std::cerr << "Channel number does not exist." << std::endl;	
+		return 1;
+	}
+	for (size_t i = channel; i < numSamples; i+=read_file.channel_number())
 	{
 		double currentSample = content[i];
 		uint8_t val = (currentSample < -level) ? 1 : 0;
@@ -138,6 +142,7 @@ int main(int argc, const char* argv[])
 			("o,output", "Output file", cxxopts::value<std::string>())
 			("gtp", "Convert WAV to GTP", cxxopts::value<bool>())
 			("level", "Egde level for cassette", cxxopts::value<double>()->default_value("0.1"))
+			("ch", "Select channel if STEREO", cxxopts::value<int>()->default_value("1"))
 			("help", "Print help")
 		;
 
@@ -172,8 +177,12 @@ int main(int argc, const char* argv[])
 			std::cerr << "Target format is mandatory." << std::endl;	
 			return 1;
 		}
+		if (result["ch"].as<int>()<1 || result["ch"].as<int>()>2) {
+			std::cerr << "Channel number can be only 1 or 2." << std::endl;	
+			return 1;
+		}
 		if (result.count("gtp")) {
-			return wav_to_gtp(input_file, output_file, result["level"].as<double>());
+			return wav_to_gtp(input_file, output_file, result["level"].as<double>(), result["ch"].as<int>()-1);
 		}
 
 	}
