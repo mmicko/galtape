@@ -40,6 +40,11 @@ int wav_to_gtp(std::string input_file, std::string output_file, double level, in
 		std::cerr << "Channel number does not exist." << std::endl;	
 		return 1;
 	}
+	if (read_file.sample_rate()!=44100) {
+		std::cerr << "WAV must be sampled at 44100Hz, recommended 16 bits per sample." << std::endl;
+		return 1;
+	}
+
 	for (size_t i = channel; i < numSamples; i+=read_file.channel_number())
 	{
 		double currentSample = content[i];
@@ -80,15 +85,15 @@ int wav_to_gtp(std::string input_file, std::string output_file, double level, in
 		prevVal = val;
 	}
 	if (wait_a5) {
-		printf("Not able to find sync signal !\n");
-		return -1;
+		std::cerr << "Not able to find sync signal !" << std::endl;	
+		return 1;
 	}
 	// add garbage byte
 	buffer.push_back(data);
 	printf("Number of data bytes found: %lu\n", buffer.size());
 	if (buffer.size() < 5) {
-		printf("No data found !\n");
-		return -1;
+		std::cerr << "Not data found !" << std::endl;	
+		return 1;
 	}
 	if (buffer[1] == 0x36 || buffer[2] == 0x2c) {
 		printf("BASIC program found\n");
@@ -102,8 +107,8 @@ int wav_to_gtp(std::string input_file, std::string output_file, double level, in
 	uint16_t block_size = (program_end - program_start) + 1 + 4 + 2;
 	printf("Found SIZE :%04x\n", block_size);
 	if (buffer.size() < block_size) {
-		printf("There is not enough data found !\n");
-		return -1;
+		std::cerr << "There is not enough data found !" << std::endl;	
+		return 1;
 	}
 	uint8_t sum = 0;
 	for(uint16_t i=0;i<block_size-1;i++) {
