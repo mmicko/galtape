@@ -141,7 +141,6 @@ int main(int argc, const char* argv[])
 			.show_positional_help();
 
 		options
-			.allow_unrecognised_options()
 			.add_options()
 			("i,input", "Input", cxxopts::value<std::string>())
 			("o,output", "Output file", cxxopts::value<std::string>())
