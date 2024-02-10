@@ -247,11 +247,11 @@ Error File::Read(uint64_t frame_number, void (*decrypt)(char*, size_t),
   for (size_t sample_idx = 0; sample_idx < output->size(); sample_idx++) {
     if (impl_->header.fmt.bits_per_sample == 8) {
       // 8bits case
-      int8_t value;
+      uint8_t value;
       impl_->istream.read(reinterpret_cast<char*>(&value), sizeof(value));
       decrypt(reinterpret_cast<char*>(&value), sizeof(value) / sizeof(char));
       (*output)[sample_idx] =
-          static_cast<float>(value) / std::numeric_limits<int8_t>::max();
+          static_cast<float>(((int)value-0x80)) / std::numeric_limits<int8_t>::max();
     } else if (impl_->header.fmt.bits_per_sample == 16) {
       // 16 bits
       int16_t value;
