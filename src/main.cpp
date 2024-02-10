@@ -4,7 +4,7 @@
 #include "cxxopts.hpp"
 #include "wave/file.h"
 
-int wav_to_gtp(std::string input_file, std::string output_file, double level, int channel)
+int wav_to_gtp(std::string input_file, std::string output_file, double level, int channel, bool no_garbage)
 {
 	wave::File read_file;
 	std::vector<float> content;
@@ -103,17 +103,19 @@ int wav_to_gtp(std::string input_file, std::string output_file, double level, in
 	printf("Found PROGRAM START:%04x\n", program_start);
 	printf("Found PROGRAM END  :%04x\n", program_end);
 	// basic size 
-	//  + 0xA5 byte +  4 bytes for basic start/end +  checksum + garbage byte
-	uint16_t block_size = (program_end - program_start) + 1 + 4 + 2;
+	//  + 0xA5 byte +  4 bytes for basic start/end + checksum
+	uint16_t block_size = (program_end - program_start) + 1 + 4 + 1;
 	printf("Found SIZE :%04x\n", block_size);
 	if (buffer.size() < block_size) {
-		std::cerr << "There is not enough data found !" << std::endl;	
+		std::cerr << "There is not enough data found !" << std::endl;
 		return 1;
 	}
 	uint8_t sum = 0;
-	for(uint16_t i=0;i<block_size-1;i++) {
+	for(uint16_t i=0;i<block_size;i++) {
 		sum += buffer[i];
 	}
+	// Add garbage byte if any
+	if (buffer.size() > block_size && !no_garbage) block_size++;
 	printf("Checksum is %s\n", (sum == 0xff) ? "OK" : "WRONG");
 
 	FILE *fp = fopen(output_file.c_str(), "wb");
@@ -147,6 +149,7 @@ int main(int argc, const char* argv[])
 			("gtp", "Convert WAV to GTP", cxxopts::value<bool>())
 			("level", "Egde level for cassette", cxxopts::value<double>()->default_value("0.1"))
 			("ch", "Select channel if STEREO", cxxopts::value<int>()->default_value("1"))
+			("no-garbage", "Do not emit garbage bit", cxxopts::value<bool>()->default_value("false"))
 			("help", "Print help")
 		;
 
@@ -186,7 +189,7 @@ int main(int argc, const char* argv[])
 			return 1;
 		}
 		if (result.count("gtp")) {
-			return wav_to_gtp(input_file, output_file, result["level"].as<double>(), result["ch"].as<int>()-1);
+			return wav_to_gtp(input_file, output_file, result["level"].as<double>(), result["ch"].as<int>()-1, result["no-garbage"].as<bool>());
 		}
 
 	}
